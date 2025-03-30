@@ -73,3 +73,21 @@ def feet_slide(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg = Scen
     body_vel = asset.data.body_lin_vel_w[:, asset_cfg.body_ids, :2]
     reward = torch.sum(body_vel.norm(dim=-1) * contacts, dim=1)
     return reward
+
+def foot_height(env: RLTaskEnv, asset_cfg: SceneEntityCfg, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
+    """Reward foot height during air time."""
+    # 獲取腳部位置
+    asset = env.scene[asset_cfg.name]
+    foot_height = asset.data.body_pos_w[:, asset_cfg.body_ids, 2]  # z 軸高度
+    
+    # 獲取接觸感測器資料
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    # 判斷腳部是否離地（contact time = 0 表示離地）
+    in_air = contact_sensor.data.current_contact_time[:, sensor_cfg.body_ids] == 0.0
+    
+    # 目標高度
+    target_height = 0.2  # 例如 20cm
+    # 只在離地時計算獎勵
+    height_reward = torch.clamp(foot_height - target_height, min=0.0, max=0.5)
+    reward = height_reward * in_air.float()  # 只在離地時給獎勵
+    return torch.sum(reward, dim=1)
