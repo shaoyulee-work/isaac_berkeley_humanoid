@@ -260,7 +260,7 @@ class RewardsCfg:
 
     # -- task
     track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_lin_vel_xy_exp, weight=1.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_exp, weight=0.5, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
@@ -276,8 +276,8 @@ class RewardsCfg:
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),
             "command_name": "base_velocity",
-            "threshold_min": 0.2,
-            "threshold_max": 0.5,
+            "threshold_min": 0.1,
+            "threshold_max": 0.4,
         },
     )
     feet_slide = RewTerm(
@@ -302,6 +302,14 @@ class RewardsCfg:
         func=mdp.joint_deviation_l1,
         weight=-0.01,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"])},
+    )
+    foot_height = RewTerm(
+        func=mdp.foot_height,
+        weight=2.0,
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*faa"),  # 腳踝部位
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),  # 使用現有的 contact_forces 感測器
+        },
     )
     # -- optional penalties
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=0.0)
